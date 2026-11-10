@@ -269,8 +269,8 @@ details.more>.more-body{padding:16px 20px 18px;}
 
 #cloud-error{position:fixed;inset:0;background:var(--violetD);z-index:998;display:flex;align-items:center;justify-content:center;padding:20px;}
 #cloud-error.hidden{display:none;}
-.side-actions{display:flex;gap:8px;margin-top:12px;}
-.side-actions button{flex:1;font-family:var(--fm);font-size:10px;color:rgba(255,255,255,.7);background:none;border:1px solid rgba(255,255,255,.18);border-radius:999px;padding:9px 8px;cursor:pointer;transition:.15s;margin:0;width:auto;}
+.side-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;}
+.side-actions button{flex:1 1 calc(50% - 4px);min-width:0;white-space:nowrap;font-family:var(--fm);font-size:10px;color:rgba(255,255,255,.7);background:none;border:1px solid rgba(255,255,255,.18);border-radius:999px;padding:9px 8px;cursor:pointer;transition:.15s;margin:0;width:auto;}
 .side-actions button:hover{color:#fff;border-color:#fff;}
 .side-actions #logout-btn{margin:0;width:auto;}
 button.ph-r{font-family:var(--fm);}
