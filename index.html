@@ -974,8 +974,24 @@ function authSubmit(){
   fn.catch(err=>{$('#auth-err').textContent=traduceError(err.code);});
 }
 async function authLogout(){
-  try{await flushSave(currentUid);}catch(e){}
-  await auth.signOut();
+  const uid=currentUid;
+  const btn=$('#logout-btn');
+  if(btn){btn.disabled=true;btn.textContent='cerrando sesión…';}
+  // guarda lo pendiente, pero sin quedarse esperando más de 4 segundos
+  try{await Promise.race([flushSave(uid),new Promise(r=>setTimeout(r,4000))]);}catch(e){}
+  if(saveDirty&&!confirm('Todavía no se terminan de guardar tus últimos cambios en la nube (¿sin internet?).\n\n¿Cerrar sesión de todos modos? Podrías perder lo último que registraste.')){
+    if(btn){btn.disabled=false;btn.textContent='cerrar sesión';}
+    return;
+  }
+  try{await auth.signOut();}
+  catch(e){
+    console.error('No se pudo cerrar sesión:',e);
+    alert('No se pudo cerrar sesión. Revisa tu conexión e inténtalo de nuevo.');
+    if(btn){btn.disabled=false;btn.textContent='cerrar sesión';}
+    return;
+  }
+  // no dejar copia de tus datos en este navegador
+  try{if(uid)localStorage.removeItem('fin_'+uid);}catch(e){}
   location.reload();
 }
 function traduceError(code){
