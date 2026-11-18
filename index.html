@@ -1374,13 +1374,16 @@ function renderFlowLine(movsMes,anterior,ahorrosMes){
   const days=Object.keys(byDay).sort();
   const meses=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
   const labels=days.map(d=>{const dt=new Date(d+'T00:00:00');return dt.getDate()+' '+meses[dt.getMonth()];});
-  let accIn=0,accOut=0,accSav=0;const dataIn=[],dataOut=[],dataNet=[];
-  days.forEach(d=>{accIn+=byDay[d].in;accOut+=byDay[d].out;accSav+=byDay[d].sav;dataIn.push(accIn);dataOut.push(accOut);dataNet.push(anterior+accIn-accOut-accSav);});
+  // las entradas arrancan con el saldo del mes anterior y las salidas incluyen lo que apartaste a ahorro:
+  // así la distancia entre las dos líneas es exactamente tu balance (lo que te queda)
+  let accIn=anterior,accOut=0,accSav=0;const dataIn=[],dataOut=[],dataNet=[];
+  days.forEach(d=>{accIn+=byDay[d].in;accOut+=byDay[d].out;accSav+=byDay[d].sav;dataIn.push(accIn);dataOut.push(accOut+accSav);dataNet.push(accIn-accOut-accSav);});
+  const hayAhorro=accSav>0;
   flowLineChart=new Chart(el,{type:'line',
     data:{labels,datasets:[
-      {label:'Entradas acum.',data:dataIn,borderColor:cv('--pine'),backgroundColor:'transparent',tension:.3,fill:false,pointRadius:3},
-      {label:'Salidas acum.',data:dataOut,borderColor:cv('--clay'),backgroundColor:'transparent',tension:.3,fill:false,pointRadius:3},
-      {label:'Balance (descuenta ahorro'+(anterior?' y suma saldo anterior':'')+')',data:dataNet,borderColor:cv('--gold'),borderDash:[4,3],tension:.3,fill:false,pointRadius:0,borderWidth:1.5},
+      {label:anterior?'Entradas acum. (con saldo anterior)':'Entradas acum.',data:dataIn,borderColor:cv('--pine'),backgroundColor:'transparent',tension:.3,fill:false,pointRadius:3},
+      {label:hayAhorro?'Salidas acum. (con ahorro)':'Salidas acum.',data:dataOut,borderColor:cv('--clay'),backgroundColor:'transparent',tension:.3,fill:false,pointRadius:3},
+      {label:'Balance (lo que te queda)',data:dataNet,borderColor:cv('--gold'),borderDash:[4,3],tension:.3,fill:false,pointRadius:0,borderWidth:1.5},
     ]},
     options:{responsive:true,maintainAspectRatio:false,
       scales:{
