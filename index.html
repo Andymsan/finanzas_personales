@@ -1653,18 +1653,26 @@ function renderBudget(){
     g.items.forEach((it,ii)=>{
       const activo=itemActivo(it);
       if(activo)total+=it.v;
-      const p=ingreso()>0?it.v/ingreso()*100:0;
       const nameStyle=!activo?'color:var(--muted);text-decoration:line-through;':'';
       const rango=rangoTxt(it);
       const pauseLbl=(it.pausa?' <span style="font-family:var(--fm);font-size:9px;color:var(--muted);">(en pausa)</span>':'')+(rango?` <span style="font-family:var(--fm);font-size:9px;color:${activo?'var(--goldd)':'var(--muted)'};">(${rango})</span>`:'');
       const gastado=S.movs.filter(m=>tiposDeArea(g.area).includes(m.tipo)&&m.cat===it.n&&mesKey(m.date)===mesActual).reduce((a,m)=>a+m.amt,0);
       const pctGasto=it.v>0?gastado/it.v*100:0;
       const sinPres=it.v===0&&gastado>0;
-      const gastoColor=gastado===0?'var(--muted)':(sinPres||pctGasto>100?'var(--danger)':(pctGasto>=90?'var(--clay)':'var(--pine)'));
-      const gastoTxt=activo?(sinPres?`${money(gastado)} gastado este mes · sin presupuesto asignado`:(gastado>0?`${money(gastado)} gastado este mes (${Math.round(pctGasto)}%)`:'sin gastos registrados este mes')):'';
+      // barra = lo gastado este mes contra lo presupuestado (tolerancia de 50 centavos por redondeo)
+      const excedido=sinPres||(it.v>0&&gastado>it.v+0.5);
+      const completo=!excedido&&it.v>0&&gastado>=it.v-0.5;
+      const barW=!activo?0:(excedido||completo?100:Math.max(0,pctGasto));
+      const barCol=excedido?'var(--danger)':(completo?'var(--pine)':'var(--sage)');
+      const gastoColor=gastado===0?'var(--muted)':(excedido?'var(--danger)':(completo?'var(--pine)':'var(--ml)'));
+      const gastoTxt=!activo?'':sinPres?`${money(gastado)} gastado este mes · sin presupuesto asignado`
+        :excedido?`${money(gastado)} gastado este mes (${Math.round(pctGasto)}%) · te pasaste por ${money(gastado-it.v)}`
+        :completo?`${money(gastado)} gastado este mes · cubierto ✓`
+        :gastado>0?`${money(gastado)} gastado este mes (${Math.round(pctGasto)}%) · faltan ${money(it.v-gastado)}`
+        :'sin gastos registrados este mes';
       html+=`<tr>
         <td><span style="${nameStyle}">${it.n}</span>${pauseLbl}
-          <div class="minibar"><span style="width:${activo?Math.min(100,p*3):0}%"></span></div>
+          <div class="minibar"><span style="width:${barW}%;background:${barCol};"></span></div>
           ${gastoTxt?`<div style="font-family:var(--fm);font-size:9px;color:${gastoColor};margin-top:3px;">${gastoTxt}</div>`:''}</td>
         <td class="val" style="${nameStyle}">${money(it.v)}</td>
         <td style="text-align:right;white-space:nowrap;">
